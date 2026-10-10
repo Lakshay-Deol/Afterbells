@@ -1,0 +1,64 @@
+# AGENTS.md — AfterBells
+
+Intent + execution router for tokenized stocks on BSC. Read `README.md`
+first; `docs/codebase-summary.md` has the map.
+
+## Commands
+
+```bash
+pnpm install                       # workspace (web)
+cd services/api && uv sync         # backend (dev group installs by default)
+pnpm dev:api                       # uvicorn :8000 (use --port 8001 if 8000 busy)
+pnpm dev:web                       # next dev :3000 — proxies /api/* via AFTERBELLS_API
+pnpm test:api / test:web / test:contracts
+./scripts/ci-local.sh              # full pipeline; --skip-contracts if no forge
+docker compose up --build          # containerized demo
+```
+
+## Hard rules
+
+- After each completed update, commit the changes on a branch, push it, create
+  a pull request, and enable auto-merge. This is standing user authorization;
+  do not ask again for routine PR creation or merging. Run the relevant checks,
+  resolve CI failures, and verify the final merge status. Respect branch
+  protections; never bypass required checks or reviews. If blocked, report
+  the PR link and the exact blocker rather than claiming it merged.
+
+- `EXECUTION_ENABLED=false` stays the default. Never enable mainnet
+  execution without explicit user authorization.
+- The LLM interprets; the deterministic engine decides. Final transaction
+  authority is never in model code paths.
+- No private keys in the repo or the browser. Throwaway keys only for
+  testnet; never commit them.
+- Fixtures are labeled `RECORDED`; blocked integrations are labeled
+  `BLOCKED` with reproduction steps. Never fabricate tx hashes, signatures,
+  deployments, receipts, or payment settlement.
+- Receipt hash = sha256 of canonical JSON
+  (`json.dumps(sort_keys, separators=(",",":"), ensure_ascii)`); TS parity
+  in `apps/web/lib/canonical.ts` — keep both sides in lockstep.
+
+## Gotchas learned the hard way
+
+- `REPO_ROOT = config.py parents[3]` — package must sit at
+  `<root>/services/api/afterbells`, or set `AFTERBELLS_REPO_ROOT`
+  (Docker preserves the layout under `/repo`).
+- Dev proxy: `next dev` reads `AFTERBELLS_API` at start; restart it if the
+  API port changes. `/api/health` returns `service=afterbells-api` —
+  fingerprint-check before trusting proxied data.
+- `services/keeper/agent` is standalone — its own `pnpm-workspace.yaml`
+  scopes `allowBuilds` (esbuild); run `pnpm install` inside it, not
+  `--ignore-workspace` (which skips that config).
+- `packages/contracts/lib/forge-std` is a git submodule — clone with
+  `--recurse-submodules`.
+- `baw`/`bag` CLIs and Foundry live at `/root/.local/bin` and
+  `/root/.foundry/bin` in the dev WSL; the API test server may run on
+  `:8001` when `:8000` is occupied by another project.
+- WSL git identity is `0xacee`; pushes to `Lakshay-Deol/Afterbells` go through
+  Windows (`powershell.exe -c "cd D:\Github\afterbells; git push"`).
+
+## Layout
+
+`apps/web` (Next.js 15, Tailwind v4, vitest) · `services/api` (FastAPI,
+pytest/ruff/mypy) · `services/keeper` (BNB Agent Studio `bag` scaffold) ·
+`packages/contracts` (Foundry receipt registry) · `fixtures/rwa` (recorded
+API responses) · `dx/` (recorded DX evidence) · `docs/demo` (screenshots).

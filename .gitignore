@@ -1,0 +1,35 @@
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.local
+.env.*.local
+!.env.example
+dist/
+build/
+out/
+.next/
+.cache/
+packages/contracts/out/
+packages/contracts/cache/
+packages/contracts/broadcast/
+.studio/
+*.log
+.DS_Store
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+data/
+test-results/
+playwright-report/
+
+# build artifacts
+*.tsbuildinfo
+
+# AI assistant artifacts
+.devin/
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+NUL

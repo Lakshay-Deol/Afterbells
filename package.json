@@ -1,0 +1,31 @@
+{
+  "name": "afterbells",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The intent and execution router for tokenized stocks",
+  "license": "MIT",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=11"
+  },
+  "scripts": {
+    "demo": "cd services/api && uv run python -m afterbells.demo",
+    "cli": "cd services/api && uv run python -m afterbells.cli",
+    "mcp": "cd services/api && uv run python -m afterbells.mcp_server",
+    "test:e2e": "pnpm --filter @afterbells/web test:e2e",
+    "format:check": "pnpm --filter @afterbells/web format:check && cd services/api && uv run ruff format --check .",
+    "dev:web": "pnpm --filter @afterbells/web dev",
+    "dev:api": "cd services/api && uv run uvicorn afterbells.api.main:app --reload --port 8000",
+    "test:api": "cd services/api && uv run pytest -q",
+    "test:web": "pnpm --filter @afterbells/web test",
+    "test:contracts": "cd packages/contracts && forge test",
+    "build": "pnpm --filter @afterbells/web build",
+    "lint": "pnpm --filter @afterbells/web lint && cd services/api && uv run ruff check .",
+    "typecheck": "pnpm --filter @afterbells/web typecheck && cd services/api && uv run mypy -p afterbells",
+    "verify:live": "cd services/api && uv run python -m afterbells.verify_live",
+    "verify:receipt": "python3 scripts/check-receipt-provenance.py",
+    "verify:mainnet-execution": "cd services/api && uv run python -m afterbells.verify_execution --i-understand-mainnet",
+    "dx:summary": "python3 scripts/dx-summary.py"
+  }
+}

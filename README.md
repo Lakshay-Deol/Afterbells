@@ -18,8 +18,6 @@ through PM2 and Cloudflare Tunnel; see [hosting operations](docs/hosting.md).
 
 Built for [BNB Hack: Tokenized Stocks Edition](https://www.bnbchain.org/en/hackathons/tokenized-stocks).
 
-![Decision desk with recorded provider comparison and verified replay](docs/demo/decision-desk.png)
-
 ## Why this exists
 
 The same company trades through different token contracts, issuers and share

@@ -1,0 +1,14 @@
+{
+  "code": "000000",
+  "message": null,
+  "messageDetail": null,
+  "data": {
+    "openState": true,
+    "marketStatus": "postmarket",
+    "reasonCode": "TRADING",
+    "reasonMsg": null,
+    "nextOpenTime": 1789689900000,
+    "nextCloseTime": 1789689540000
+  },
+  "success": true
+}

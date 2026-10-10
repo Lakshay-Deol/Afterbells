@@ -1,0 +1,100 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install deps
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check afterbells tests
+      - name: Type check
+        run: uv run mypy -p afterbells --no-incremental
+      - name: Format check
+        run: uv run ruff format --check afterbells tests
+      - name: Tests
+        run: uv run pytest -q
+      - name: Demo-mode smoke (boot on fixtures, exercise API)
+        run: |
+          DEMO_MODE=true uv run uvicorn afterbells.api.main:app --port 8123 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8123/api/health > /tmp/h.json && break; sleep 1; done
+          python3 -c "import json;d=json.load(open('/tmp/h.json'));assert d['service']=='afterbells-api' and d['demoMode'] is True, d"
+          curl -sf http://127.0.0.1:8123/api/explore/NVDA | python3 -c "import json,sys;d=json.load(sys.stdin);assert d['dataLabel']=='RECORDED' and len(d['representations'])>=1, d"
+          curl -sf -X POST http://127.0.0.1:8123/api/constitution/compile -H 'Content-Type: application/json' -d '{"text":"never spend more than 20 dollars per transaction"}' | python3 -c "import json,sys;assert json.load(sys.stdin)['constitution']['execution']['max_notional_usd'] in ('20','20.0')"
+          kill %1 || true
+
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: Test
+        run: forge test
+        working-directory: packages/contracts
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4   # version comes from package.json packageManager
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Type check
+        run: pnpm --filter @afterbells/web typecheck
+      - name: Lint
+        run: pnpm --filter @afterbells/web lint
+      - name: Unit tests
+        run: pnpm --filter @afterbells/web test
+      - name: Format check
+        run: pnpm --filter @afterbells/web format:check
+      - uses: astral-sh/setup-uv@v6
+      - name: Browser dependencies
+        run: pnpm --filter @afterbells/web exec playwright install --with-deps chromium
+      - name: Judge demo E2E
+        run: pnpm test:e2e
+
+  keeper-agent:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/keeper/agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4   # version comes from package.json packageManager
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install (standalone package)
+        run: pnpm install   # agent/pnpm-workspace.yaml makes this dir self-contained
+      - name: Compile
+        run: pnpm build
+      - name: Domain delivery boundaries
+        run: node --test tests/*.test.mjs
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No private keys / mnemonics committed
+        run: |
+          ! grep -rInE -e '-----BEGIN (RSA |EC |OPENSSH |PGP )?PRIVATE KEY' --exclude-dir=.git --exclude-dir=node_modules . || exit 1
+          ! grep -rInE '\b0x[0-9a-fA-F]{64}\b' --include='*.ts' --include='*.tsx' --include='*.py' --include='*.sol' --include='*.env*' \
+              --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=lib --exclude-dir=out . \
+            | grep -v '.env.example' | grep -vE '0x[0]{64}|gitleaks:allow' || exit 1

@@ -1,0 +1,108 @@
+"use client";
+
+import { WorkspaceIntro } from "@/components/WorkspaceIntro";
+
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { api, type Receipt, type ReceiptRow } from "@/lib/api";
+import { ReceiptCard } from "@/components/ReceiptCard";
+
+export default function ReceiptsPage() {
+  const { data, error, isPending } = useQuery({
+    queryKey: ["receipts"],
+    queryFn: () => api<{ receipts: ReceiptRow[] }>("/receipts"),
+  });
+  const [sel, setSel] = useState<string | null>(null);
+  const detail = useQuery({
+    queryKey: ["receipt", sel],
+    queryFn: () => api<Receipt>(`/receipts/${sel}`),
+    enabled: !!sel,
+  });
+
+  return (
+    <div className="workspace-page space-y-6">
+      <WorkspaceIntro
+        index="06 / EXECUTION ARCHIVE"
+        title="Keep the whole trail."
+        description="Execution-pipeline receipts record attempted transitions, including blocked runs. Home-page exposure decisions are separate, downloadable research records."
+      ></WorkspaceIntro>
+      {(error || detail.error) && (
+        <p role="alert" className="api-error">
+          {(error || detail.error)?.message}
+        </p>
+      )}
+      <p className="small-note">
+        {isPending
+          ? "Loading execution archive…"
+          : data
+            ? `${data.receipts.length} execution-pipeline records`
+            : "Archive unavailable"}
+      </p>
+      <div className="grid lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 panel p-4">
+          {data?.receipts?.length === 0 && (
+            <p className="text-sm text-[var(--color-ink-3)]">
+              No receipts yet. Run an intent from the Terminal.
+            </p>
+          )}
+          <div className="space-y-1.5">
+            {data?.receipts?.map((r) => (
+              <button
+                key={r.receipt_id}
+                onClick={() => setSel(r.receipt_id)}
+                className={`w-full text-left px-3 py-2.5 rounded-lg border text-xs transition-colors ${
+                  sel === r.receipt_id
+                    ? "border-[var(--color-accent)] bg-[var(--color-panel-2)]"
+                    : "border-[var(--color-edge)] hover:border-[var(--color-ink-3)]"
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="mono">{r.receipt_id.slice(0, 12)}…</span>
+                  <span className="flex gap-1">
+                    {r.data_label && (
+                      <span
+                        className={`chip ${r.data_label === "LIVE" ? "chip-pass" : "chip-warn"}`}
+                      >
+                        {r.data_label}
+                      </span>
+                    )}
+                    <span
+                      className={`chip ${
+                        r.state === "CONFIRMED"
+                          ? "chip-pass"
+                          : [
+                                "NO_VALID_ROUTE",
+                                "SIMULATION_FAILED",
+                                "EXECUTION_FAILED",
+                                "POLICY_REJECTED",
+                              ].includes(r.state)
+                            ? "chip-fail"
+                            : "chip-warn"
+                      }`}
+                    >
+                      {r.state}
+                    </span>
+                  </span>
+                </div>
+                <div className="text-[var(--color-ink-3)] mt-1">
+                  {r.created_at}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="lg:col-span-3">
+          {detail.data ? (
+            <ReceiptCard key={detail.data.receiptHash} receipt={detail.data} />
+          ) : (
+            <div className="panel p-8 text-sm text-[var(--color-ink-3)] text-center">
+              {detail.isFetching
+                ? "Loading selected receipt…"
+                : "Select an execution receipt to inspect its policy, transitions and integrity."}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

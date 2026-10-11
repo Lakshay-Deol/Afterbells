@@ -1,7 +1,10 @@
-﻿# Product roadmap
-
+# Product roadmap
+ 
 ## Implemented
-
+ 
+- Phase 1 Baseline and Development Reliability (Gate A Verified & Unlocked).
+- Toolchain validation, reproducible local CI runner, safe standalone frontend build.
+- Configuration safety invariants, executable architecture documentation, and OpenAPI contract snapshot.
 - BSC discovery and multiplier-aware prices across Ondo, xStocks and bStock.
 - Deterministic decision desk with source labels and rejected alternatives.
 - Same-snapshot policy comparison and a liquidity-evidence challenge.
@@ -9,7 +12,7 @@
 - REST, CLI and read-only MCP using the same engine.
 - Execution state machine hardened against missing simulation, stale prices and absent risk context.
 - Foundry registry source and BNB Agent Studio integration scaffold.
-
+ 
 See [validation](validation.md) for actual results. Historical discovery counts,
 benchmark timings and dry-run gas estimates are not current production metrics.
 

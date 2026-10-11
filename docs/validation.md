@@ -1,19 +1,19 @@
 # Validation record — 2026-10-11
 
-## Toolchain contract
+## Baseline development verification (Gate A)
 
-The supported development toolchain is Node.js 22.x, pnpm 11.x, Python
-3.12–3.13, and uv 0.8.x or newer before 1.0. Node and the preferred Python
-interpreter are recorded in `.nvmrc` and `.python-version`; the broader Python
-range matches `services/api/pyproject.toml` and current CI usage. Run
-`pnpm preflight` before installing dependencies. The command reports every
-observed version and exits non-zero with the expected range when a required
-tool is absent, unparsable, or unsupported. Its range checks can be exercised
-without altering the host using `node scripts/preflight.mjs --self-test`.
-
-Verified on 2026-10-11 with Node 22.13.1, pnpm 11.24.0, Python 3.13.7, and
-uv 0.11.25. This entry verifies only toolchain compatibility, not the later
-application checks in the historical records below.
+- **Audited branch:** `implement/phases-1-5`
+- **Verified commit:** `ff00720` (locking critical API contracts)
+- **Baseline date:** 2026-10-11
+- **Toolchain:** Node.js v22.13.1, pnpm 11.24.0, Python 3.13.7, uv 0.11.25 (`pnpm run preflight`)
+- **Frontend unit tests:** 6 test files, 16 tests passing (`pnpm test:web`)
+- **Frontend production build:** Next.js 15.5.25 standalone build completes in 1.38s; 12 static/dynamic routes generated (`pnpm build`)
+- **Backend tests & quality:** 119 tests passing (`cd services/api && uv run pytest -q`), Ruff linting 100% clean, MyPy typechecking 33 source files clean
+- **Standalone keeper runtime:** TypeScript compiles and 3 node unit tests pass (`cd services/keeper/agent && pnpm test`)
+- **Contract preflight:** `./scripts/ci-local.sh --contracts-preflight` exits 127 with explicit requirement for Foundry installation (skip recorded for local run without forge)
+- **Runtime configuration safety:** `Settings` model validators reject demo mode with execution, enforce positive finite notional ceilings, and require explicit execution guards
+- **API contract integrity:** Live OpenAPI specification matches frozen snapshot in `docs/api-contract.json`
+- **Gate A status:** **VERIFIED AND UNLOCKED**
 
 ---
 

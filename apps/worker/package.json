@@ -1,0 +1,22 @@
+{
+  "name": "@afterbells/worker",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "probe": "tsx src/index.ts --probe-once",
+    "schedule": "tsx src/index.ts --schedule-once"
+  },
+  "dependencies": {
+    "@afterbells/binance-client": "workspace:*",
+    "@afterbells/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.9.2"
+  }
+}

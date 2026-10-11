@@ -13,6 +13,7 @@
     "format:check": "prettier --check app components lib e2e scripts playwright.config.ts vitest.config.ts"
   },
   "dependencies": {
+    "@afterbells/core": "workspace:*",
     "@tanstack/react-query": "^5.85.5",
     "gsap": "^3.15.0",
     "lucide-react": "^0.544.0",

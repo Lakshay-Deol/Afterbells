@@ -49,7 +49,8 @@ all on-chain signing stays in `signing.ts` fixed code.
 cd services/keeper
 bag doctor          # scaffold + env diagnostics (PASS for project checks)
 
-cd agent && pnpm install && pnpm build   # compiles against pinned runtime
+cd agent && pnpm install --frozen-lockfile && pnpm test
+                                            # locked install, compile, boundary tests
 ```
 
 ## Run locally (no Studio deploy needed)

@@ -2,6 +2,7 @@
   "name": "afterbells-keeper-agent",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.24.0",
   "description": "The AfterBells Keeper Agent (sole signer, value layer). Canonical BNB Agent Studio scaffold; domain work delegated to the AfterBells API.",
   "type": "module",
   "engines": {

@@ -16,15 +16,15 @@
 }
 
 @theme {
-  --color-bg: #081c18;
-  --color-panel: #131d1a;
-  --color-panel-2: #20332b;
-  --color-edge: #35473e;
-  --color-ink: #e5ebe4;
-  --color-ink-2: #b4c2b8;
-  --color-ink-3: #a8b9ae;
-  --color-accent: #d4f36c;
-  --color-accent-ink: #081c18;
+  --color-bg: #0c0e13;
+  --color-panel: #13161e;
+  --color-panel-2: #1b202c;
+  --color-edge: #2c3342;
+  --color-ink: #f0f2f7;
+  --color-ink-2: #b2bacb;
+  --color-ink-3: #a1acc0;
+  --color-accent: #a3a7ff;
+  --color-accent-ink: #0c0e13;
   --color-pass: #9cdbb7;
   --color-fail: #ffad9c;
   --color-warn: #e8cc8b;
@@ -49,8 +49,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 ::selection {
-  background: #d5e3ba;
-  color: #1d382b;
+  background: #a3a7ff;
+  color: #141726;
 }
 button,
 input,
@@ -311,7 +311,7 @@ code {
   letter-spacing: -1.9px;
 }
 .desk-masthead h1 > span {
-  color: #d4f36c;
+  color: #a3a7ff;
 }
 .masthead-note {
   color: var(--color-ink-2);
@@ -385,7 +385,7 @@ code {
     transform 0.16s;
 }
 .primary-action:hover:not(:disabled) {
-  background: #e5ff95;
+  background: #bfc2ff;
   transform: translateY(-1px);
 }
 .text-action {
@@ -859,8 +859,8 @@ code {
     90deg,
     transparent 0,
     transparent calc(25% - 1px),
-    #35473e calc(25% - 1px),
-    #35473e 25%
+    #2c3342 calc(25% - 1px),
+    #2c3342 25%
   );
 }
 .parity-zero {
@@ -1188,7 +1188,7 @@ code {
 }
 .record-intro h2 em {
   font-style: normal;
-  color: #d4f36c;
+  color: #a3a7ff;
 }
 .record-intro p {
   font-size: 13px;
@@ -1206,7 +1206,7 @@ code {
   margin-top: 25px;
 }
 .receipt-paper {
-  background: #e5ebe4;
+  background: #f0f2f7;
   border: 1px solid #d2d7c8;
   padding: 22px 26px;
   box-shadow: 4px 4px 0 #314238;

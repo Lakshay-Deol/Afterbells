@@ -237,7 +237,6 @@ def normalize_lifecycle_state(state: str | ExecState) -> ExecState:
         return LEGACY_STATE_MAPPING.get(val, ExecState.UNKNOWN_SUBMISSION_OUTCOME)
 
 
-
 # Receipts are plain camelCase dicts built by services/receipts.py — a typed
 # model here would only drift from the hashed body shape, so none exists on
 # purpose.

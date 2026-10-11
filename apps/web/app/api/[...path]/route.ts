@@ -1,85 +1,80 @@
 import type { NextRequest } from "next/server";
-import { handleApiRequest } from "@afterbells/core";
+import { parseNaturalLanguagePlan } from "@afterbells/core";
 
 const apiBase = () => process.env.AFTERBELLS_API ?? "http://localhost:8000";
+// Only the pure, deterministic draft parser can run locally. Never initialize
+// signing, storage or execution services to substitute a read-only API response.
 
 async function proxyOrHandle(req: NextRequest, path: string[]) {
   const pathname = `/api/${path.join("/")}`;
-  const fullPathWithSearch = `${pathname}${req.nextUrl.search}`;
+  const fullPath = pathname + req.nextUrl.search;
   const method = req.method;
-
-  let body: any = null;
-  if (method !== "GET" && method !== "HEAD") {
-    try {
-      const text = await req.text();
-      if (text) {
-        try {
-          body = JSON.parse(text);
-        } catch {
-          body = text;
-        }
-      }
-    } catch {
-      // empty body
-    }
-  }
-
-  // First try upstream proxy if AFTERBELLS_API is explicitly set or if port 8000 answers
+  const raw =
+    method === "GET" || method === "HEAD" ? undefined : await req.text();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const upstreamUrl = `${apiBase()}${fullPathWithSearch}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1200);
-
-    const upstream = await fetch(upstreamUrl, {
+    const upstream = await fetch(apiBase() + fullPath, {
       method,
       headers: {
         "content-type": req.headers.get("content-type") ?? "application/json",
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: raw,
       cache: "no-store",
       signal: controller.signal,
     });
-    clearTimeout(timeout);
-
-    if (upstream.status !== 404 && upstream.status !== 502) {
-      return new Response(await upstream.arrayBuffer(), {
-        status: upstream.status,
-        headers: {
-          "content-type":
-            upstream.headers.get("content-type") ?? "application/json",
-        },
-      });
+    if (
+      upstream.status === 404 &&
+      path.join("/") === "plans/parse-intent" &&
+      method === "POST"
+    ) {
+      const body = JSON.parse(raw ?? "{}");
+      if (
+        typeof body.text !== "string" ||
+        !body.text.trim() ||
+        body.text.length > 2000
+      ) {
+        return Response.json(
+          {
+            detail:
+              "A nonempty instruction of at most 2000 characters is required.",
+          },
+          { status: 422 },
+        );
+      }
+      return Response.json(parseNaturalLanguagePlan(body.text));
     }
-  } catch {
-    // Upstream not reached, proceed to direct core handling
-  }
-
-  // Handle directly using @afterbells/core
-  try {
-    const response = await handleApiRequest(method, fullPathWithSearch, body);
-    return Response.json(response.data, { status: response.status });
-  } catch (err: any) {
+    return new Response(await upstream.arrayBuffer(), {
+      status: upstream.status,
+      headers: {
+        "content-type":
+          upstream.headers.get("content-type") ?? "application/json",
+      },
+    });
+  } catch (error) {
     return Response.json(
-      { error: err.message || "Failed to process request" },
-      { status: 500 }
+      {
+        detail:
+          error instanceof SyntaxError
+            ? "Invalid JSON request"
+            : "AfterBells API unavailable. Check the configured backend and retry; no fallback data was substituted.",
+      },
+      { status: error instanceof SyntaxError ? 400 : 502 },
     );
+  } finally {
+    clearTimeout(timeout);
   }
 }
-
 type Ctx = { params: Promise<{ path: string[] }> };
-
 export async function GET(req: NextRequest, ctx: Ctx) {
   return proxyOrHandle(req, (await ctx.params).path);
 }
-
 export async function POST(req: NextRequest, ctx: Ctx) {
   return proxyOrHandle(req, (await ctx.params).path);
 }
-
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   return proxyOrHandle(req, (await ctx.params).path);
 }
-
 export async function DELETE(req: NextRequest, ctx: Ctx) {
   return proxyOrHandle(req, (await ctx.params).path);
 }

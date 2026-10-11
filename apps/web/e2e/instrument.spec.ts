@@ -1,41 +1,21 @@
 import { expect, test } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
 
-test("aperture chapters move persistent geometry and reverse on seek", async ({
+test("evidence chapters show real receipt fields and preserve selection", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   await expect(page.locator(".aperture-object")).toHaveCount(3);
   const first = page.locator(".aperture-object").first();
   const address = await first.getAttribute("data-address");
-  const observe = await first.evaluate(
-    (element) => getComputedStyle(element).transform,
-  );
+  await expect(first).toContainText("/ token");
   await page.getByRole("button", { name: "02 / Normalize" }).click();
-  await expect(page.locator(".aperture-passage")).toHaveAttribute(
-    "data-chapter",
-    "1",
-  );
-  await page.waitForTimeout(900);
-  const normalized = await first.evaluate(
-    (element) => getComputedStyle(element).transform,
-  );
-  expect(normalized).not.toBe(observe);
+  await expect(first).toContainText("/ share");
   await page.getByRole("button", { name: "03 / Apply policy" }).click();
-  await page.waitForTimeout(900);
-  const policy = await first.evaluate(
-    (element) => getComputedStyle(element).transform,
-  );
-  expect(policy).not.toBe(normalized);
+  await expect(first).toContainText(/SHORTLISTED|REJECTED/);
   await page.getByRole("button", { name: "01 / Observe" }).click();
-  await page.waitForTimeout(900);
+  await expect(first).toContainText("/ token");
   expect(await first.getAttribute("data-address")).toBe(address);
-  await expect(page.locator(".aperture-passage")).toHaveAttribute(
-    "data-chapter",
-    "0",
-  );
 });
 
 test("policy shutters keep the old snapshot while comparison is pending", async ({
@@ -129,7 +109,7 @@ test("supporting journeys retain compilation, tasks and legacy failure behavior"
   });
   await page.goto("/agent");
   await page.getByRole("button", { name: "Submit", exact: true }).click();
-  await expect(page.locator("main pre")).toContainText("NOT_EXECUTED");
+  await expect(page.locator("main pre").first()).toContainText("NOT_EXECUTED");
   await expect(page.locator("main")).toContainText("SUCCEEDED");
   await page.screenshot({
     path: "../../docs/demo/instrument-agent-result.png",

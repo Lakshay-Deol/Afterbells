@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "pnpm build && playwright test",
-    "format:check": "prettier --check app components lib e2e scripts playwright.config.ts vitest.config.ts"
+    "format:check": "prettier --check app components lib e2e scripts playwright.config.ts vitest.config.ts",
+    "prebuild": "pnpm --filter @afterbells/core... build",
+    "pretypecheck": "pnpm --filter @afterbells/core... build"
   },
   "dependencies": {
     "@afterbells/core": "workspace:*",

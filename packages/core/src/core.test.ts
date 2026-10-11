@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { parseNaturalLanguagePlan } from './parser';
 import { computeCostMetric } from './cost';
 import { checkReadiness } from './readiness';
 import { SafetyGovernor } from './safety';
 import { OrderExecutor } from './executor';
-import { RwaToken } from '@afterbells/binance-client';
+import { MemoryOrFileDatabase } from './db';
+import * as storage from './db';
+import { BurnerWalletManager } from './wallet';
+import { RwaToken, BinanceClient } from '@afterbells/binance-client';
 
 describe('Core Engine - Afterbell Specification Parity', () => {
   it('parses Meera persona recurring buy intent into structured parameters', () => {
@@ -53,21 +56,44 @@ describe('Core Engine - Afterbell Specification Parity', () => {
     expect(readiness.deferReason).toContain('earnings');
   });
 
-  it('executes a scheduled buy state machine through terminal FILLED state with receipt', async () => {
-    const executor = new OrderExecutor();
-    const order = await executor.executeScheduledBuy({
-      ticker: 'NVDA',
-      amountUsdt: 25,
-      toleranceBps: 50
-    });
+  it('cannot initialize execution without an explicitly configured signing identity', () => {
+    const previousKey = process.env.BURNER_PRIVATE_KEY;
+    delete process.env.BURNER_PRIVATE_KEY;
+    try {
+      expect(() => new OrderExecutor()).toThrow('Signing identity not configured');
+    } finally {
+      if (previousKey !== undefined) process.env.BURNER_PRIVATE_KEY = previousKey;
+    }
+  });
 
-    expect(order.state).toBe('FILLED');
-    expect(order.tx_hash).toBeTruthy();
-    expect(order.receipt_text).toContain('NVDA shares ($25.00 USDT)');
-    expect(order.receipt_text).toContain('FILLED');
-    expect(order.transitions.some(t => t.state === 'QUOTED')).toBe(true);
-    expect(order.transitions.some(t => t.state === 'SIGNED')).toBe(true);
-    expect(order.transitions.some(t => t.state === 'SUBMITTED')).toBe(true);
+  it('starts storage without fabricated plans, financial observations or orders', () => {
+    const db = new MemoryOrFileDatabase();
+    expect(db.getPlans()).toEqual([]);
+    expect(db.getSamples()).toEqual([]);
+    expect(db.getOrders()).toEqual([]);
+    expect(db.getDxEvents()).toEqual([]);
+  });
+
+  it('keeps provider completion without transaction evidence unverified', async () => {
+    // Explicit test doubles: no signing key, RPC request or order submission.
+    const client = new BinanceClient({ mockMode: true });
+    vi.spyOn(client, 'getOrderStatus').mockResolvedValue({ orderId: 'test-order', status: 'FILLED' });
+    const wallet = {
+      getBalances: async () => ({ bnb: 1, usdt: 100, allowance: 100 }),
+      getAddress: () => '0x1111111111111111111111111111111111111111',
+      signTypedData: async () => 'test-only-signature'
+    } as unknown as BurnerWalletManager;
+    vi.spyOn(storage, 'getDatabase').mockReturnValue(new MemoryOrFileDatabase());
+    const governor = new SafetyGovernor({ killSwitch: false });
+    try {
+      const order = await new OrderExecutor(client, wallet, governor).executeScheduledBuy({ ticker: 'NVDA', amountUsdt: 25, toleranceBps: 500 });
+      expect(order.state).toBe('PENDING_ONCHAIN');
+      expect(order.tx_hash).toBeUndefined();
+      expect(order.receipt_text).toContain('Settlement unverified');
+      expect(governor.getDailySpent()).toBe(0);
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 
   it('enforces safety rails (kill switch and daily spend cap)', () => {

@@ -66,4 +66,3 @@ def test_pipeline_refuses_execution_even_with_confirm_flag(settings, intent, con
     p = Pipeline(settings)
     out = p.run(intent, constitution, state, confirm=True)
     assert out["state"] in ("POLICY_REJECTED", "NO_VALID_ROUTE", "SIMULATION_FAILED")
-

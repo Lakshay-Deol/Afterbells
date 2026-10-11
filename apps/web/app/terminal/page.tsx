@@ -129,7 +129,7 @@ export default function Terminal() {
                 onClick={() => run.mutate(true)}
                 disabled={run.isPending}
               >
-                Confirm & continue
+                Continue evaluation
               </button>
             </div>
           )}

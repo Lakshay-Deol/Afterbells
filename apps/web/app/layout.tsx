@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./instrument.css";
+import "./workspace.css";
 import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
 
 export const metadata: Metadata = {
-  title: "AfterBells — intent & execution router for tokenized stocks",
+  title: "AfterBells — Equity intelligence workspace",
   description:
     "Compare tokenized stock exposure across BSC issuers, test explicit risk policies, and export replayable decision evidence.",
 };

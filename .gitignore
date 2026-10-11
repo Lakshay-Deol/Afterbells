@@ -33,3 +33,7 @@ playwright-report/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 NUL
+
+
+implementation.md
+plan.md

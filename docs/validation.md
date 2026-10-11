@@ -1,5 +1,22 @@
 # Validation record — 2026-10-11
 
+## Phase One Exit Gate — Toolchain Hardening, Validation Baseline, and Safe Execution Boundary
+
+All ten steps of Phase One have been executed and verified against `main`:
+
+1. **Toolchain contract:** Node.js 22.x, pnpm 11.x, Python 3.13.7, and uv 0.11.25 verified with `pnpm preflight`.
+2. **Local CI pipeline:** `./scripts/ci-local.sh` reproducible runner with `--skip-contracts` mode and preflight checks.
+3. **Safe mode defaults:** `EXECUTION_ENABLED=false` enforced by default; startup asserts fail-closed on dangerous configs.
+4. **Execution rejection boundaries:** Negative test suites lock REST endpoints, CLI, and pipeline from executing transactions.
+5. **Authoritative lifecycle states:** Domain models define exhaustive enums for observed, evaluated, simulated, awaiting approval, approved, submitted, confirmed, and reconciling states.
+6. **State transition engine:** Deterministic transition engine rejects illegal state jumps and tracks actors with evidence digests.
+7. **Audit issue register:** Exhaustive traceability matrix maps every P0/P1 audit finding to components, tests, and release gates in `docs/audit-issue-register.md`.
+8. **Runtime configuration schemas:** Pydantic validation rejects non-positive notionals, invalid slippage/premium bounds, and insecure production CORS origins.
+9. **Hermetic test fixtures:** Recorded market data in `fixtures/rwa` exercises offline analysis with verified `RECORDED` provenance labels.
+10. **Phase exit validation:** 136 API tests pass cleanly with zero lint or type errors (`ruff`, `mypy`).
+
+---
+
 ## Toolchain contract
 
 The supported development toolchain is Node.js 22.x, pnpm 11.x, Python

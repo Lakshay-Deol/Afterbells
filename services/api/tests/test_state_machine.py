@@ -118,5 +118,3 @@ def test_authoritative_lifecycle_reconciliation_flow():
     sm.transition(ExecState.RECONCILING, note="keeper polling")
     sm.transition(ExecState.CONFIRMED, note="found on chain")
     assert sm.terminal is True
-
-

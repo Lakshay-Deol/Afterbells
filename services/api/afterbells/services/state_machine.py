@@ -63,7 +63,6 @@ _ALLOWED: dict[ExecState, set[ExecState]] = {
     ExecState.CANCELLED: set(),
     ExecState.EXPIRED: set(),
     ExecState.RECONCILIATION_FAILED: set(),
-
     # Legacy transitions
     ExecState.INTENT_RECEIVED: {ExecState.INTENT_COMPILED, ExecState.POLICY_REJECTED},
     ExecState.INTENT_COMPILED: {ExecState.AWAITING_POLICY_APPROVAL, ExecState.DISCOVERING},

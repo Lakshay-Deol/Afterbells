@@ -67,4 +67,3 @@ def test_production_accepts_valid_cors_origins():
     )
     assert settings.runtime_environment == "production"
     assert settings.cors_origin_list == ["https://afterbells.app", "https://api.afterbells.app"]
-

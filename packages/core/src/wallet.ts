@@ -7,7 +7,7 @@ import {
   Hex,
   Address
 } from 'viem';
-import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts';
+import { privateKeyToAccount } from 'viem/accounts';
 import { bsc } from 'viem/chains';
 
 export const USDT_BSC_ADDRESS = '0x55d398326f99059fF775485246999027B3197955' as Address;
@@ -60,9 +60,7 @@ export class BurnerWalletManager {
       this.privateKey = process.env.BURNER_PRIVATE_KEY as Hex;
       this.isGenerated = false;
     } else {
-      // Deterministic demo burner key if none provided
-      this.privateKey = '0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d';
-      this.isGenerated = true;
+      throw new Error('Signing identity not configured. Supply an explicitly authorized server-side key; no default private key is provided.');
     }
 
     this.account = privateKeyToAccount(this.privateKey);

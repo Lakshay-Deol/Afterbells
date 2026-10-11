@@ -263,8 +263,14 @@ export class OrderExecutor {
     const orderStatus = await this.client.getOrderStatus(submitRes.orderId);
 
     if (orderStatus.status === 'FILLED' || orderStatus.status === 'FINISHED') {
-      order.tx_hash = orderStatus.txHash || '0x8f2a1b94e3207c917b2b415a7cf3008d6c771fae890b23f510cd57a229a1b021';
-      addTransition('FILLED', `Confirmed on BSC. Tx: ${order.tx_hash.slice(0, 10)}...`);
+      if (!orderStatus.txHash) {
+        addTransition('PENDING_ONCHAIN', 'Vendor reported completion without a transaction hash; settlement remains unverified.');
+        order.receipt_text = 'Settlement unverified: vendor completion did not include a transaction hash. No confirmed purchase is claimed.';
+        db.saveOrder(order);
+        return order;
+      }
+      order.tx_hash = orderStatus.txHash;
+      addTransition('FILLED', `Vendor reported filled. Tx: ${order.tx_hash.slice(0, 10)}...`);
 
       // Record spend against daily cap
       this.safety.recordSpend(options.amountUsdt);

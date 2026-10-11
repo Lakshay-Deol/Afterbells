@@ -2,9 +2,8 @@ import type { NextRequest } from "next/server";
 import { parseNaturalLanguagePlan } from "@afterbells/core";
 
 const apiBase = () => process.env.AFTERBELLS_API ?? "http://localhost:8000";
-// Only the pure, deterministic draft parser can run locally. The core file
-// database contains synthetic seed records and must never supply financial
-// observations, wallet balances, orders or saved user plans to this workspace.
+// Only the pure, deterministic draft parser can run locally. Never initialize
+// signing, storage or execution services to substitute a read-only API response.
 
 async function proxyOrHandle(req: NextRequest, path: string[]) {
   const pathname = `/api/${path.join("/")}`;

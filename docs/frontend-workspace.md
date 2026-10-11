@@ -63,8 +63,8 @@ and default interpretation must be reviewed explicitly before applying a draft.
 - Desktop/mobile captures were visually inspected, including correction of an
   inherited verdict text color. Native disclosures support Escape; reduced-motion
   settings are honored. No automated axe audit was run.
-- Relevant API tests passed; the full backend, keeper and contract suites are left
-  to repository CI because no implementation in those areas changed.
+- The upstream merge follow-up also passed all 136 backend tests locally. Keeper
+  and contracts passed upstream CI; final CI is rerun after the security fixes.
 
 Representative captures: [desktop decision](demo/workspace/decision-desktop.png),
 [mobile decision](demo/workspace/decision-mobile.png), [overview](demo/workspace/overview.png).
@@ -78,3 +78,14 @@ and [Mercury](https://mercury.com/), diagnostics from [Vercel](https://vercel.co
 and readable analysis from [TradingView](https://www.tradingview.com/). Mobbin and
 Dribbble were consulted as pattern catalogs. Awwwards and Behance could not be
 retrieved during this run. No product branding or artwork was copied.
+
+## Upstream CI follow-up
+
+Upstream CI exposed existing Python whitespace failures and three legacy core
+secret-pattern matches. The Python fixes are formatting-only. Core storage now
+starts empty rather than inventing plans, observations, orders or DX evidence.
+Wallet initialization requires explicitly configured server-side signing identity;
+no default private key is provided. A provider completion without a transaction
+hash remains PENDING_ONCHAIN, does not consume the spend ledger and cannot create
+a fabricated transaction hash. These changes preserve the read-only frontend's
+pure parser; it does not initialize the wallet or core storage.

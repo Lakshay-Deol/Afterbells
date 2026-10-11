@@ -6,10 +6,11 @@
   "license": "MIT",
   "packageManager": "pnpm@11.24.0",
   "engines": {
-    "node": ">=22",
-    "pnpm": ">=11"
+    "node": ">=22 <23",
+    "pnpm": ">=11 <12"
   },
   "scripts": {
+    "preflight": "node scripts/preflight.mjs",
     "demo": "cd services/api && uv run python -m afterbells.demo",
     "cli": "cd services/api && uv run python -m afterbells.cli",
     "mcp": "cd services/api && uv run python -m afterbells.mcp_server",

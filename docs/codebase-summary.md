@@ -1,10 +1,15 @@
-﻿# Codebase map
+# Codebase map
 
-Read [README](../README.md) for the product and [validation](validation.md) for measured status.
+Read [README](../README.md) for the product and [validation](validation.md) for measured status. See [frontend workspace](frontend-workspace.md) for UI capabilities and verification.
 
 | Location | Responsibility |
 |---|---|
 | apps/web/app/page.tsx | Decision desk: intent, comparison, policy challenge, replay |
+| apps/web/app/overview | API health, current agent activity and workflow entry points |
+| apps/web/app/strategy | Explicit intent interpretation, structured draft and export; storage capability gated |
+| apps/web/app/simulation | Imported receipt integrity/replay and same-snapshot liquidity counterfactual |
+| apps/web/app/observations | Probe archive with explicit unavailable/unknown states |
+| apps/web/app/workspace.css | Shared graphite/indigo shell, surfaces and responsive tokens |
 | apps/web/app/terminal | Original execution terminal; execution remains blocked |
 | apps/web/components/ParityMap.tsx | Signed provider parity on a shared scale |
 | apps/web/lib | Typed API, decision types, Python-compatible canonical SHA-256 |

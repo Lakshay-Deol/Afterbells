@@ -28,9 +28,11 @@ test("desk loads immediately and evidence is keyboard accessible", async ({
   await expect(inspect).toHaveAttribute("aria-expanded", "true");
   await page.keyboard.press("Enter");
   await expect(inspect).toHaveAttribute("aria-expanded", "false");
-  await page.getByText("Workspace", { exact: true }).click();
+  await page.locator(".workspace-menu > summary").click();
   await expect(
-    page.getByRole("link", { name: "Receipt archive" }),
+    page
+      .locator(".workspace-dropdown")
+      .getByRole("link", { name: "Receipt archive" }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator(".workspace-menu")).not.toHaveAttribute("open");

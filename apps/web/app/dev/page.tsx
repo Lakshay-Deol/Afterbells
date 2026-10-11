@@ -1,5 +1,6 @@
 "use client";
 
+import { DxAppendixView } from "@/components/DxAppendixView";
 import { WorkspaceIntro } from "@/components/WorkspaceIntro";
 
 import { useQuery } from "@tanstack/react-query";
@@ -181,6 +182,7 @@ export default function DevPage() {
           </table>
         </div>
       </div>
+      <DxAppendixView />
     </div>
   );
 }

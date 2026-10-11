@@ -127,7 +127,10 @@ export default function AgentOps() {
               </button>
             </div>
             {task.isError && (
-              <div className="mt-2 text-xs text-[var(--color-fail)]">
+              <div
+                role="alert"
+                className="mt-2 text-xs text-[var(--color-fail)]"
+              >
                 {(task.error as Error).message}
               </div>
             )}
@@ -209,14 +212,20 @@ export default function AgentOps() {
         <h2 className="text-sm font-medium mb-3">Task history</h2>
         <div className="space-y-1.5 text-xs mono">
           {(data?.tasks ?? []).map((t) => (
-            <div key={t.task_id} className="flex gap-3 items-center">
+            <div key={t.task_id} className="flex flex-wrap gap-3 items-center">
               <span
-                className={`chip ${t.status === "SUCCEEDED" ? "chip-pass" : "chip-fail"}`}
+                className={`chip ${t.status === "SUCCEEDED" ? "chip-info" : "chip-fail"}`}
               >
                 {t.status}
               </span>
               <span>{t.kind}</span>
               <span className="text-[var(--color-ink-3)]">{t.created_at}</span>
+              <details>
+                <summary>Inspect task {t.task_id}</summary>
+                <pre className="evidence-json">
+                  {t.output_json ?? "No output supplied."}
+                </pre>
+              </details>
             </div>
           ))}
           {(!data?.tasks || data.tasks.length === 0) && (

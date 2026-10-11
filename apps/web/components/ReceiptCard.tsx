@@ -15,6 +15,7 @@ type VerifyState =
     };
 
 export function ReceiptCard({ receipt }: { receipt: Receipt }) {
+  const [copyNotice, setCopyNotice] = useState("");
   const tx = (receipt.execution as { txHash?: string })?.txHash;
   const [verify, setVerify] = useState<VerifyState>({ status: "idle" });
 
@@ -74,7 +75,16 @@ export function ReceiptCard({ receipt }: { receipt: Receipt }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           className="text-xs px-3 py-1.5 rounded border border-[var(--color-edge)] hover:border-[var(--color-accent)]"
-          onClick={() => navigator.clipboard.writeText(receipt.receiptHash)}
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(receipt.receiptHash);
+              setCopyNotice("Hash copied.");
+            } catch {
+              setCopyNotice(
+                "Clipboard unavailable. Select the hash above to copy it.",
+              );
+            }
+          }}
         >
           copy hash
         </button>
@@ -110,8 +120,16 @@ export function ReceiptCard({ receipt }: { receipt: Receipt }) {
           </a>
         )}
       </div>
+      {copyNotice && (
+        <p role="status" className="small-note mt-3">
+          {copyNotice}
+        </p>
+      )}
       {verify.status === "done" && (
-        <div className="mt-3 text-xs mono space-y-1 border-t border-[var(--color-edge)] pt-3">
+        <div
+          role="status"
+          className="mt-3 text-xs mono space-y-1 border-t border-[var(--color-edge)] pt-3"
+        >
           <div className="flex gap-2">
             <span className="text-[var(--color-ink-3)] w-24 shrink-0">
               client sha256

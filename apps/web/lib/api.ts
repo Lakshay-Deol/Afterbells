@@ -5,7 +5,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   });
   const body = await r.json().catch(() => ({}));
   if (!r.ok) {
-    const detail = body?.detail;
+    const detail = body?.detail ?? body?.error;
     const message =
       typeof detail === "string"
         ? detail
@@ -18,6 +18,16 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
               .join("; ")
           : r.statusText;
     throw new ApiError(r.status, message);
+  }
+  if (
+    path === "/health" &&
+    (body.service !== "afterbells-api" ||
+      typeof body.executionEnabled !== "boolean")
+  ) {
+    throw new ApiError(
+      502,
+      "Backend fingerprint mismatch. Expected the AfterBells analysis API; verify AFTERBELLS_API.",
+    );
   }
   return body as T;
 }

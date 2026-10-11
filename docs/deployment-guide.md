@@ -13,6 +13,10 @@ pnpm dev:web          # Next.js on :3000, /api/* → :8000
 ```
 
 Copy `.env.example` → `.env`. Defaults are safe: `EXECUTION_ENABLED=false`.
+Set `RUNTIME_ENVIRONMENT` explicitly outside local development. Startup rejects
+recorded production mode, recorded-data execution, disabled simulation or
+confirmation guards, non-finite/not-positive notional ceilings, and empty
+chain/platform/quote allowlists.
 
 ## Backend hosting
 

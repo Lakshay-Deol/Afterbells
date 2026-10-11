@@ -59,3 +59,11 @@ def test_simulation_preserves_sender_value_and_block(monkeypatch):
     assert calls == [
         ("eth_call", [{"to": "0xabc", "data": "0x1234", "value": "0x64", "from": "0xdef"}, "0x2a"])
     ]
+
+
+def test_pipeline_refuses_execution_even_with_confirm_flag(settings, intent, constitution, state):
+    assert settings.execution_enabled is False
+    p = Pipeline(settings)
+    out = p.run(intent, constitution, state, confirm=True)
+    assert out["state"] in ("POLICY_REJECTED", "NO_VALID_ROUTE", "SIMULATION_FAILED")
+

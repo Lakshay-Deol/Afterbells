@@ -1,3 +1,22 @@
+# Validation record — 2026-10-11
+
+## Toolchain contract
+
+The supported development toolchain is Node.js 22.x, pnpm 11.x, Python
+3.12–3.13, and uv 0.8.x or newer before 1.0. Node and the preferred Python
+interpreter are recorded in `.nvmrc` and `.python-version`; the broader Python
+range matches `services/api/pyproject.toml` and current CI usage. Run
+`pnpm preflight` before installing dependencies. The command reports every
+observed version and exits non-zero with the expected range when a required
+tool is absent, unparsable, or unsupported. Its range checks can be exercised
+without altering the host using `node scripts/preflight.mjs --self-test`.
+
+Verified on 2026-10-11 with Node 22.13.1, pnpm 11.24.0, Python 3.13.7, and
+uv 0.11.25. This entry verifies only toolchain compatibility, not the later
+application checks in the historical records below.
+
+---
+
 # Validation record — 2026-09-23
 
 ## Authored product motion

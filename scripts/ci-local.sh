@@ -1,52 +1,124 @@
 #!/usr/bin/env bash
 # ci-local.sh — run every check CI runs, locally, in order.
-# Usage: ./scripts/ci-local.sh [--skip-contracts]
+# Usage: ./scripts/ci-local.sh [--skip-contracts] [--stage NAME]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 step() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 
-step "pnpm install (frozen)"
-pnpm install --frozen-lockfile
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/ci-local.sh [--skip-contracts] [--stage NAME]
 
-step "web: typecheck"
-pnpm --filter @afterbells/web typecheck
+Run the same non-destructive checks as CI. With no --stage, all stages run.
 
-step "web: lint (eslint)"
-pnpm --filter @afterbells/web lint
-pnpm --filter @afterbells/web format:check
+Stages: install, web, api, demo, e2e, contracts, keeper, docs
+Options:
+  --skip-contracts  Skip Foundry checks during a full run
+  --stage NAME      Run one named stage (repeatable)
+  --help            Show this help
+EOF
+}
 
-step "web: tests (vitest)"
-pnpm --filter @afterbells/web test
+skip_contracts=false
+declare -a requested_stages=()
+while (($#)); do
+  case "$1" in
+    --skip-contracts) skip_contracts=true ;;
+    --stage)
+      [[ $# -ge 2 ]] || { printf 'error: --stage requires a value\n' >&2; exit 2; }
+      requested_stages+=("$2")
+      shift
+      ;;
+    --help|-h) usage; exit 0 ;;
+    *) printf 'error: unknown argument: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
 
-step "api: ruff"
-(cd services/api && uv run ruff check .)
-(cd services/api && uv run ruff format --check .)
+task_uv_cache="${TMPDIR:-/tmp}/afterbells-uv-cache"
+mkdir -p "$task_uv_cache"
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$task_uv_cache}"
 
-step "api: mypy"
-(cd services/api && uv run mypy -p afterbells)
+wants() {
+  local candidate="$1"
+  ((${#requested_stages[@]} == 0)) && return 0
+  local selected
+  for selected in "${requested_stages[@]}"; do
+    [[ "$selected" == "$candidate" ]] && return 0
+  done
+  return 1
+}
 
-step "api: pytest"
-(cd services/api && uv run pytest -q)
+valid_stage() {
+  case "$1" in install|web|api|demo|e2e|contracts|keeper|docs) return 0 ;; *) return 1 ;; esac
+}
 
-step "judge demo and MCP (MCP round trip is included in pytest)"
-pnpm demo
+for selected in "${requested_stages[@]}"; do
+  valid_stage "$selected" || { printf 'error: unknown stage: %s\n' "$selected" >&2; exit 2; }
+done
 
-step "production build and browser E2E"
-pnpm --filter @afterbells/web exec playwright install chromium
-pnpm test:e2e
+if wants install; then
+  step "pnpm install (frozen)"
+  pnpm install --frozen-lockfile
+fi
 
-if [ "${1:-}" != "--skip-contracts" ]; then
+if wants web; then
+  step "web: typecheck"
+  pnpm --filter @afterbells/web typecheck
+
+  step "web: lint (eslint)"
+  pnpm --filter @afterbells/web lint
+  pnpm --filter @afterbells/web format:check
+
+  step "web: tests (vitest)"
+  pnpm --filter @afterbells/web test
+fi
+
+if wants api; then
+  step "api: ruff"
+  (cd services/api && uv run ruff check .)
+  (cd services/api && uv run ruff format --check .)
+
+  step "api: mypy"
+  (cd services/api && uv run mypy -p afterbells)
+
+  step "api: pytest"
+  (cd services/api && uv run pytest -q)
+fi
+
+if wants demo; then
+  step "judge demo and MCP (MCP round trip is included in pytest)"
+  pnpm demo
+fi
+
+if wants e2e; then
+  step "production build and browser E2E"
+  pnpm --filter @afterbells/web exec playwright install chromium
+  pnpm test:e2e
+fi
+
+if wants contracts && [[ "$skip_contracts" != true ]]; then
   step "contracts: forge test"
-  # foundryup installs to ~/.foundry/bin which isn't always on PATH
-  command -v forge >/dev/null || export PATH="$HOME/.foundry/bin:$PATH"
+  command -v forge >/dev/null || {
+    printf 'error: forge is required for the contracts stage; install Foundry or use --skip-contracts\n' >&2
+    exit 127
+  }
+  git submodule status packages/contracts/lib/forge-std | grep -qv '^-' || {
+    printf 'error: forge-std submodule is not initialized; run git submodule update --init\n' >&2
+    exit 1
+  }
   (cd packages/contracts && forge test)
 fi
 
-step "keeper: standalone install, build and delivery tests"
-(cd services/keeper/agent && pnpm install --frozen-lockfile && pnpm test)
+if wants keeper; then
+  step "keeper: standalone install, build and delivery tests"
+  (cd services/keeper/agent && pnpm install --frozen-lockfile && pnpm test)
+fi
 
-step "documentation links"
-python3 scripts/check-doc-links.py
+if wants docs; then
+  step "documentation links"
+  python3 scripts/check-doc-links.py
+fi
 
 step "ALL CHECKS PASSED"

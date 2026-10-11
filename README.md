@@ -47,7 +47,10 @@ swap simulation to the later submitted transaction, so execution fails closed.
 ## Quickstart
 
 Prerequisites: Node 22+, pnpm 11, Python 3.12+ and uv. Foundry is needed only for
-the notary contract tests. The Python environment is selected by uv.
+the notary contract tests. The Python environment is selected by uv. Run
+`pnpm preflight` to verify toolchain versions.
+Run `./scripts/ci-local.sh --skip-contracts` to execute all local continuous
+integration validation suites hermetically.
 
 ```bash
 git clone --recurse-submodules https://github.com/Lakshay-Deol/Afterbells

@@ -4,9 +4,31 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/ci-local.sh [--skip-contracts]
+
+Runs the same validation groups as CI. The command never enables execution or
+performs live provider verification. Set UV_CACHE_DIR to override the default
+writable cache at /tmp/afterbells-uv-cache.
+EOF
+}
+
+skip_contracts=false
+case "${1:-}" in
+  "") ;;
+  --skip-contracts) skip_contracts=true ;;
+  --help|-h) usage; exit 0 ;;
+  *) usage >&2; exit 2 ;;
+esac
+
+export UV_CACHE_DIR="${UV_CACHE_DIR:-/tmp/afterbells-uv-cache}"
+mkdir -p "$UV_CACHE_DIR"
+
 step() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 
 step "pnpm install (frozen)"
+pnpm preflight
 pnpm install --frozen-lockfile
 
 step "web: typecheck"
@@ -36,10 +58,9 @@ step "production build and browser E2E"
 pnpm --filter @afterbells/web exec playwright install chromium
 pnpm test:e2e
 
-if [ "${1:-}" != "--skip-contracts" ]; then
+if [ "$skip_contracts" = false ]; then
   step "contracts: forge test"
-  # foundryup installs to ~/.foundry/bin which isn't always on PATH
-  command -v forge >/dev/null || export PATH="$HOME/.foundry/bin:$PATH"
+  command -v forge >/dev/null || { echo "forge is required; install Foundry or use --skip-contracts" >&2; exit 127; }
   (cd packages/contracts && forge test)
 fi
 

@@ -75,7 +75,7 @@ _ALLOWED: dict[ExecState, set[ExecState]] = {
         ExecState.POLICY_REJECTED,
         ExecState.NO_VALID_ROUTE,
     },
-    ExecState.SIMULATING: {ExecState.AWAITING_CONFIRMATION, ExecState.SIMULATION_FAILED},
+    ExecState.SIMULATING: {ExecState.AWAITING_CONFIRMATION, ExecState.READY, ExecState.SIMULATION_FAILED},
     ExecState.AWAITING_CONFIRMATION: {ExecState.READY, ExecState.POLICY_REJECTED},
     ExecState.READY: {ExecState.EXECUTING, ExecState.POLICY_REJECTED},
     ExecState.EXECUTING: {ExecState.PENDING_CONFIRMATION, ExecState.EXECUTION_FAILED},

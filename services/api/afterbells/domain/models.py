@@ -151,6 +151,32 @@ class CandidateRoute(BaseModel):
 
 
 class ExecState(str, Enum):
+    # Analysis & Observation
+    OBSERVED = "OBSERVED"
+    EVALUATED = "EVALUATED"
+    SIMULATED = "SIMULATED"
+
+    # Approval & Gate
+    AWAITING_APPROVAL = "AWAITING_APPROVAL"
+    APPROVED = "APPROVED"
+
+    # Execution & Settlement
+    SUBMITTED = "SUBMITTED"
+    CONFIRMED = "CONFIRMED"
+
+    # Terminal Failure & Rejection
+    BLOCKED = "BLOCKED"
+    REJECTED = "REJECTED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    EXPIRED = "EXPIRED"
+
+    # Post-Submission Uncertainty & Reconciliation
+    UNKNOWN_SUBMISSION_OUTCOME = "UNKNOWN_SUBMISSION_OUTCOME"
+    RECONCILING = "RECONCILING"
+    RECONCILIATION_FAILED = "RECONCILIATION_FAILED"
+
+    # Legacy pipeline states (backward compatibility)
     INTENT_RECEIVED = "INTENT_RECEIVED"
     INTENT_COMPILED = "INTENT_COMPILED"
     AWAITING_POLICY_APPROVAL = "AWAITING_POLICY_APPROVAL"
@@ -164,9 +190,52 @@ class ExecState(str, Enum):
     READY = "READY"
     EXECUTING = "EXECUTING"
     PENDING_CONFIRMATION = "PENDING_CONFIRMATION"
-    CONFIRMED = "CONFIRMED"
     EXECUTION_FAILED = "EXECUTION_FAILED"
     POLICY_REJECTED = "POLICY_REJECTED"
+
+
+LEGACY_STATE_MAPPING: dict[str, ExecState] = {
+    "INTENT_RECEIVED": ExecState.OBSERVED,
+    "INTENT_COMPILED": ExecState.OBSERVED,
+    "DISCOVERING": ExecState.OBSERVED,
+    "QUOTING": ExecState.OBSERVED,
+    "POLICY_EVALUATION": ExecState.EVALUATED,
+    "SIMULATING": ExecState.SIMULATED,
+    "AWAITING_POLICY_APPROVAL": ExecState.AWAITING_APPROVAL,
+    "AWAITING_CONFIRMATION": ExecState.AWAITING_APPROVAL,
+    "READY": ExecState.APPROVED,
+    "EXECUTING": ExecState.SUBMITTED,
+    "PENDING_CONFIRMATION": ExecState.SUBMITTED,
+    "NO_VALID_ROUTE": ExecState.BLOCKED,
+    "POLICY_REJECTED": ExecState.REJECTED,
+    "SIMULATION_FAILED": ExecState.FAILED,
+    "EXECUTION_FAILED": ExecState.FAILED,
+}
+
+TERMINAL_LIFECYCLE_STATES: set[ExecState] = {
+    ExecState.CONFIRMED,
+    ExecState.BLOCKED,
+    ExecState.REJECTED,
+    ExecState.FAILED,
+    ExecState.CANCELLED,
+    ExecState.EXPIRED,
+    ExecState.RECONCILIATION_FAILED,
+    # Legacy terminals
+    ExecState.NO_VALID_ROUTE,
+    ExecState.SIMULATION_FAILED,
+    ExecState.EXECUTION_FAILED,
+    ExecState.POLICY_REJECTED,
+}
+
+
+def normalize_lifecycle_state(state: str | ExecState) -> ExecState:
+    val = state.value if isinstance(state, ExecState) else str(state)
+    try:
+        parsed = ExecState(val)
+        return LEGACY_STATE_MAPPING.get(parsed.value, parsed)
+    except ValueError:
+        return LEGACY_STATE_MAPPING.get(val, ExecState.UNKNOWN_SUBMISSION_OUTCOME)
+
 
 
 # Receipts are plain camelCase dicts built by services/receipts.py — a typed

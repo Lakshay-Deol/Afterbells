@@ -52,3 +52,30 @@ public writes to the receipt archive. Keeper tasks retain their own history.
 The Foundry receipt registry is a notary with no custody or routing authority.
 An event establishes that a caller committed a hash, not that the alleged trade
 occurred. Agent Studio signing stays outside the analysis tool surface.
+
+## Authoritative Lifecycle States
+
+The execution and decision state machine defines standard lifecycle states distinguishing
+observation from execution, approval, and failure/reconciliation:
+
+- **Analysis & Observation:**
+  - `OBSERVED`: Intent and market candidates observed and parsed.
+  - `EVALUATED`: Deterministic policy evaluation complete against strategy constraints.
+  - `SIMULATED`: Read-only pre-flight simulation completed.
+- **Approval & Gating:**
+  - `AWAITING_APPROVAL`: Evaluation requires human confirmation or user signature.
+  - `APPROVED`: Intent satisfies all rules and explicit human/policy approval granted.
+- **Execution & Settlement:**
+  - `SUBMITTED`: Cryptographic transaction payload dispatched to network RPC.
+  - `CONFIRMED`: On-chain inclusion and receipt verification completed.
+- **Terminal Rejection & Failure:**
+  - `BLOCKED`: Pipeline halted due to safety ceiling, circuit breaker, or missing route.
+  - `REJECTED`: Policy explicitly rejected candidate route.
+  - `FAILED`: Simulation or execution reverted or threw runtime exception.
+  - `CANCELLED`: User or keeper cancelled before final submission.
+  - `EXPIRED`: Transaction or quote expired past allowed lifetime.
+- **Uncertainty & Reconciliation:**
+  - `UNKNOWN_SUBMISSION_OUTCOME`: RPC dropped connection or timed out after submission.
+  - `RECONCILING`: Background keeper actively polling chain status and receipt logs.
+  - `RECONCILIATION_FAILED`: Final reconciliation unable to verify outcome within timeout.
+

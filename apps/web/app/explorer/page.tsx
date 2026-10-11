@@ -12,7 +12,8 @@ export default function Explorer() {
   const [filter, setFilter] = useState("");
   const { data, isFetching, error } = useQuery<ExploreResult>({
     queryKey: ["explore", q],
-    queryFn: () => api(`/explore/${q}`),
+    queryFn: ({ signal }) =>
+      api(`/explore/${encodeURIComponent(q)}`, { signal }),
     enabled: !!q,
   });
   const index = useQuery<{ underlyings: Underlying[] }>({
@@ -39,17 +40,23 @@ export default function Explorer() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            setQ(ticker.toUpperCase());
+            setQ(ticker.trim().toUpperCase());
           }}
           className="flex gap-2"
         >
           <input
             aria-label="Underlying ticker"
+            required
+            pattern="[A-Za-z][A-Za-z0-9.]{0,14}"
+            maxLength={15}
             className="bg-transparent border border-[var(--color-edge)] rounded-lg px-3 py-2 text-sm w-32 mono uppercase"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
           />
-          <button className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-accent-ink)] text-sm font-semibold">
+          <button
+            disabled={isFetching || !ticker.trim()}
+            className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-accent-ink)] text-sm font-semibold"
+          >
             {isFetching ? "…" : "Explore"}
           </button>
         </form>

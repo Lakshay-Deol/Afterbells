@@ -11,7 +11,10 @@ export function RiskBanner() {
     >
       <AlertTriangle size={15} className="shrink-0 text-[#ffad9c]" />
       <p className="leading-tight m-0">
-        <strong className="font-semibold text-white">Notice:</strong> Tokenized securities trade on-chain 24/7 but can be halted or restricted during corporate actions, earnings windows, or issuer pauses. Afterbell checks tradability and execution costs before acting. Not investment advice.
+        <strong className="font-semibold text-white">Notice:</strong> Tokenized
+        securities trade on-chain 24/7 but can be halted or restricted during
+        corporate actions, earnings windows, or issuer pauses. Afterbell checks
+        tradability and execution costs before acting. Not investment advice.
       </p>
     </div>
   );

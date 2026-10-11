@@ -63,9 +63,15 @@ async function startLoop() {
 // Entrypoint
 const args = process.argv.slice(2);
 if (args.includes('--probe-once')) {
-  runProbeOnce().catch(console.error);
+  runProbeOnce().then(() => process.exit(0)).catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 } else if (args.includes('--schedule-once')) {
-  runSchedulerOnce().catch(console.error);
+  runSchedulerOnce().then(() => process.exit(0)).catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 } else {
   startLoop().catch(console.error);
 }

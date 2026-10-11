@@ -37,3 +37,34 @@ def test_production_cannot_be_recorded_mode():
 def test_staging_analysis_configuration_is_valid():
     settings = Settings(_env_file=None, runtime_environment="staging", execution_enabled=False)
     assert settings.runtime_environment == "staging"
+
+
+@pytest.mark.parametrize("value", [0, -5, 6000])
+def test_slippage_and_premium_hard_bounds(value):
+    with pytest.raises(ValidationError, match="MAX_SLIPPAGE_BPS_HARD"):
+        Settings(_env_file=None, max_slippage_bps_hard=value)
+    with pytest.raises(ValidationError, match="MAX_PREMIUM_BPS_HARD"):
+        Settings(_env_file=None, max_premium_bps_hard=value)
+
+
+@pytest.mark.parametrize("bad_origin", ["*", "http://localhost:3000", "http://127.0.0.1:8000"])
+def test_production_rejects_insecure_cors_origins(bad_origin):
+    with pytest.raises(ValidationError, match="insecure production CORS origin"):
+        Settings(
+            _env_file=None,
+            runtime_environment="production",
+            demo_mode=False,
+            cors_origins=bad_origin,
+        )
+
+
+def test_production_accepts_valid_cors_origins():
+    settings = Settings(
+        _env_file=None,
+        runtime_environment="production",
+        demo_mode=False,
+        cors_origins="https://afterbells.app,https://api.afterbells.app",
+    )
+    assert settings.runtime_environment == "production"
+    assert settings.cors_origin_list == ["https://afterbells.app", "https://api.afterbells.app"]
+

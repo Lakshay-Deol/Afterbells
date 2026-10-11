@@ -85,8 +85,18 @@ class Settings(BaseSettings):
             raise ValueError("at least one allowed chain ID is required")
         if not self.platforms or not self.quote_assets:
             raise ValueError("allowed token platforms and quote assets cannot be empty")
-        if self.runtime_environment == "production" and self.demo_mode:
-            raise ValueError("production cannot serve recorded demo data")
+        if self.max_slippage_bps_hard <= 0 or self.max_slippage_bps_hard > 5000:
+            raise ValueError("MAX_SLIPPAGE_BPS_HARD must be between 1 and 5000 bps")
+        if self.max_premium_bps_hard <= 0 or self.max_premium_bps_hard > 5000:
+            raise ValueError("MAX_PREMIUM_BPS_HARD must be between 1 and 5000 bps")
+        if self.http_timeout_s <= 0 or self.http_timeout_s > 300:
+            raise ValueError("HTTP_TIMEOUT_S must be between 1 and 300 seconds")
+        if self.runtime_environment == "production":
+            if self.demo_mode:
+                raise ValueError("production cannot serve recorded demo data")
+            for origin in self.cors_origin_list:
+                if origin == "*" or "localhost" in origin or "127.0.0.1" in origin:
+                    raise ValueError(f"insecure production CORS origin: {origin}")
         return self
 
     @property

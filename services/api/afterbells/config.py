@@ -6,9 +6,12 @@ the default value of MAX_MAINNET_NOTIONAL_USD is small on purpose.
 """
 
 import os
+from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Layout-derived root; AFTERBELLS_REPO_ROOT overrides for non-standard deploys.
@@ -22,6 +25,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(REPO_ROOT / ".env"), env_prefix="", extra="ignore")
 
     # --- mode ---
+    runtime_environment: Literal["local", "test", "staging", "production"] = "local"
     demo_mode: bool = False  # serve recorded fixtures instead of live APIs
 
     # --- Binance public endpoints (no key) ---
@@ -61,6 +65,29 @@ class Settings(BaseSettings):
     max_simulation_age_s: int = 60
     max_quote_age_s: int = 30
     max_reference_age_s: int = 900  # stale reference ceiling used when policy sets none
+
+    @model_validator(mode="after")
+    def validate_safety_invariants(self) -> "Settings":
+        """Reject configurations that could turn analysis data into financial authority."""
+        if self.demo_mode and self.execution_enabled:
+            raise ValueError("recorded demo data can never be used with execution enabled")
+        if self.execution_enabled and not self.require_simulation:
+            raise ValueError("execution requires an exact simulation")
+        if self.execution_enabled and not self.require_confirmation:
+            raise ValueError("execution requires explicit confirmation")
+        try:
+            maximum = Decimal(self.max_mainnet_notional_usd)
+        except InvalidOperation as exc:
+            raise ValueError("MAX_MAINNET_NOTIONAL_USD must be a finite decimal") from exc
+        if not maximum.is_finite() or maximum <= 0:
+            raise ValueError("MAX_MAINNET_NOTIONAL_USD must be a positive finite decimal")
+        if not self.chain_ids:
+            raise ValueError("at least one allowed chain ID is required")
+        if not self.platforms or not self.quote_assets:
+            raise ValueError("allowed token platforms and quote assets cannot be empty")
+        if self.runtime_environment == "production" and self.demo_mode:
+            raise ValueError("production cannot serve recorded demo data")
+        return self
 
     @property
     def rpc_urls(self) -> list[str]:

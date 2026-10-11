@@ -6,6 +6,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, CompiledConstitution, ConstitutionRevision } from "@/lib/api";
 
+// Constitution state is runtime-only API data. Keeping this route dynamic
+// prevents a production build from ever depending on an API process or local
+// SQLite state while collecting static pages.
+export const dynamic = "force-dynamic";
+
 const EXAMPLES = [
   "Never spend my last $100 USDC",
   "Never put more than 20% of the portfolio into one company",

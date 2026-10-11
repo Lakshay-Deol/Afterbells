@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ci-local.sh — run every check CI runs, locally, in order.
-# Usage: ./scripts/ci-local.sh [--skip-contracts] [--stage NAME]
+# Usage: ./scripts/ci-local.sh [--skip-contracts] [--contracts-preflight] [--stage NAME]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -8,23 +8,26 @@ step() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/ci-local.sh [--skip-contracts] [--stage NAME]
+Usage: ./scripts/ci-local.sh [--skip-contracts] [--contracts-preflight] [--stage NAME]
 
 Run the same non-destructive checks as CI. With no --stage, all stages run.
 
 Stages: install, web, api, demo, e2e, contracts, keeper, docs
 Options:
   --skip-contracts  Skip Foundry checks during a full run
+  --contracts-preflight  Check Foundry and forge-std, then exit without compiling
   --stage NAME      Run one named stage (repeatable)
   --help            Show this help
 EOF
 }
 
 skip_contracts=false
+contracts_preflight=false
 declare -a requested_stages=()
 while (($#)); do
   case "$1" in
     --skip-contracts) skip_contracts=true ;;
+    --contracts-preflight) contracts_preflight=true ;;
     --stage)
       [[ $# -ge 2 ]] || { printf 'error: --stage requires a value\n' >&2; exit 2; }
       requested_stages+=("$2")
@@ -35,6 +38,24 @@ while (($#)); do
   esac
   shift
 done
+
+check_contract_prerequisites() {
+  command -v forge >/dev/null || {
+    printf 'error: forge is required; install Foundry using the official installer\n' >&2
+    return 127
+  }
+  [[ -f packages/contracts/lib/forge-std/src/Test.sol ]] || {
+    printf 'error: forge-std is not initialized; run git submodule update --init --recursive\n' >&2
+    return 1
+  }
+  printf 'ok: forge %s\n' "$(forge --version | head -n 1)"
+  printf 'ok: forge-std submodule initialized\n'
+}
+
+if [[ "$contracts_preflight" == true ]]; then
+  check_contract_prerequisites
+  exit 0
+fi
 
 task_uv_cache="${TMPDIR:-/tmp}/afterbells-uv-cache"
 mkdir -p "$task_uv_cache"
@@ -100,14 +121,7 @@ fi
 
 if wants contracts && [[ "$skip_contracts" != true ]]; then
   step "contracts: forge test"
-  command -v forge >/dev/null || {
-    printf 'error: forge is required for the contracts stage; install Foundry or use --skip-contracts\n' >&2
-    exit 127
-  }
-  git submodule status packages/contracts/lib/forge-std | grep -qv '^-' || {
-    printf 'error: forge-std submodule is not initialized; run git submodule update --init\n' >&2
-    exit 1
-  }
+  check_contract_prerequisites
   (cd packages/contracts && forge test)
 fi
 

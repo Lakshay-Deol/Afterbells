@@ -82,3 +82,41 @@ def test_lifecycle_states_serialization_and_representation():
     assert ExecState.EXPIRED in TERMINAL_LIFECYCLE_STATES
     assert ExecState.RECONCILIATION_FAILED in TERMINAL_LIFECYCLE_STATES
 
+
+def test_authoritative_lifecycle_happy_path():
+    from afterbells.services.state_machine import InvalidStateTransitionError
+
+    sm = ExecutionStateMachine(initial_state=ExecState.OBSERVED, actor="test-runner")
+    sm.transition(ExecState.EVALUATED, note="evaluated", evidence_digest="0xabc1")
+    sm.transition(ExecState.SIMULATED, note="simulated", evidence_digest="0xabc2")
+    sm.transition(ExecState.AWAITING_APPROVAL, note="requires user", evidence_digest="0xabc3")
+    sm.transition(ExecState.APPROVED, note="approved by user", actor="user-123", evidence_digest="0xabc4")
+    sm.transition(ExecState.SUBMITTED, note="tx broadcast", evidence_digest="0xabc5")
+    sm.transition(ExecState.CONFIRMED, note="receipt mined", evidence_digest="0xabc6")
+
+    assert sm.terminal is True
+    assert sm.history[-1]["evidence_digest"] == "0xabc6"
+    assert sm.history[-2]["actor"] == "system"
+    assert sm.history[-3]["actor"] == "user-123"
+
+    with pytest.raises(InvalidStateTransitionError):
+        sm.transition(ExecState.OBSERVED)
+
+
+def test_authoritative_lifecycle_illegal_jump_observed_to_submitted():
+    from afterbells.services.state_machine import InvalidStateTransitionError
+
+    sm = ExecutionStateMachine(initial_state=ExecState.OBSERVED)
+    with pytest.raises(InvalidStateTransitionError, match="OBSERVED -> SUBMITTED not allowed"):
+        sm.transition(ExecState.SUBMITTED)
+
+
+def test_authoritative_lifecycle_reconciliation_flow():
+    sm = ExecutionStateMachine(initial_state=ExecState.APPROVED)
+    sm.transition(ExecState.SUBMITTED)
+    sm.transition(ExecState.UNKNOWN_SUBMISSION_OUTCOME, note="timeout")
+    sm.transition(ExecState.RECONCILING, note="keeper polling")
+    sm.transition(ExecState.CONFIRMED, note="found on chain")
+    assert sm.terminal is True
+
+

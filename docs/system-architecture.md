@@ -52,3 +52,20 @@ public writes to the receipt archive. Keeper tasks retain their own history.
 The Foundry receipt registry is a notary with no custody or routing authority.
 An event establishes that a caller committed a hash, not that the alleged trade
 occurred. Agent Studio signing stays outside the analysis tool surface.
+
+## Persistence and operational boundaries
+
+The current repository uses a synchronous local SQLite store (`services/persistence.py`)
+designed for single-user analysis and local CLI/demo workflows. It stores a single
+active `portfolio_constitution` row and background task state. It does not yet implement
+multi-tenant data isolation, versioned strategy histories, or ACID migrations (which are
+slated for Phase 7).
+
+The codebase maintains a strict architectural separation between two distinct pipelines:
+1. **Analysis decision pipeline (`services/decisions.py`):** Pure, deterministic evaluation
+   and replay of market data observations against strategy policies, generating downloadable
+   canonical SHA-256 decision receipts. Zero financial side effects or wallet mutations.
+2. **Execution pipeline (`services/pipeline.py`):** The legacy execution prototype that runs
+   discovery and wallet quotes. It is permanently fail-closed by default (`EXECUTION_ENABLED=false`),
+   blocks on simulation (`SKIP/BLOCKED`), and requires dedicated security gating (Phase 8) before
+   any live execution can be considered.

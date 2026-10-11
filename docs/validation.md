@@ -42,14 +42,13 @@ execution switch changed.
 | Production Chromium E2E | PASS, 16-test full run on isolated ports 8049/3049, plus a targeted pending-comparison test on 8052/3052; covers geometry reversal, challenge, restore, replay, keyboard, errors and responsive 390/768/1440 review |
 | Deterministic demo | PASS; same-snapshot depth challenge yields `NO_VALID_ROUTE`, both receipts replay |
 
-The running app produced [six scene frames](demo/motion/), responsive aperture
-captures at 390/768/1440 px and a [30.64 second recording](demo/motion/afterbells-motion.webm).
+The running app produced six scene frames, responsive aperture
+captures at 390/768/1440 px and a 30.64 second recording.
 The local Chromium navigation load event was 210 ms with about 817 kB resource
 transfer. In a 120-frame sample during the entrance, median frame interval was
 16.7 ms, p95 was 50 ms and two intervals exceeded 50 ms. These are local lab
 observations while other browser tests were active, not field performance.
-Exact values are in [motion measurements](demo/motion/measurements.json) and
-[responsive measurements](demo/browser-measurements.json).
+Exact values were recorded in historical motion and responsive measurements.
 
 Public deployment verification on 2026-09-23: the WSL runtime retained its
 `data/` and `dx/` directories and its prior build for rollback. The production
